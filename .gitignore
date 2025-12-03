@@ -1,3 +1,5 @@
 link
 embed
 *.o
+*.a
+clean.*

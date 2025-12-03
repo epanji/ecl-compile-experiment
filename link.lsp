@@ -1,5 +1,8 @@
 (cl:in-package :cl-user)
 
-(format t "Hello world!~%")
+(defpackage static
+  (:export #:hello-world))
+
+(static:hello-world)
 
 (ext:quit 0)

@@ -18,17 +18,24 @@ profile : compile
 .PHONY : compile
 compile : $(PROG0) $(PROG1)
 
-$(PROG0).o : $(PROG0).lsp
+libstatic.a : static.lsp
 	# ------------------------------------------------------------
-	$(ECL) --norc -s -q --compile $(PROG0).lsp
+	$(ECL) --norc \
+		--eval '(compile-file "static.lsp" :system-p t)' \
+		--eval '(c:build-static-library "static" :lisp-files (quote ("static.o")) :init-name "init_static")' \
+		--eval '(ext:quit)'
+
+$(PROG0).o : libstatic.a $(PROG0).lsp
+	# ------------------------------------------------------------
+	$(ECL) --norc -c clean.c -h clean.eclh --data clean.data -s -q --compile $(PROG0).lsp
 
 $(PROG0) : $(PROG0).o
-	$(ECL) --norc -o $(PROG0) --link $(PROG0).o
+	$(ECL) --norc -o $(PROG0) --link libstatic.a $(PROG0).o
 
-$(PROG1) : $(PROG1).c
+$(PROG1) : libstatic.a $(PROG1).c
 	# ------------------------------------------------------------
-	$(CC) -O3 -o $(PROG1) $(PROG1).c -lecl
+	$(CC) -O3 -o $(PROG1) $(PROG1).c libstatic.a -lecl
 
 .PHONY : clean
 clean :
-	rm $(PROG0) $(PROG1) $(wildcard *.o)
+	rm $(PROG0) $(PROG1) $(wildcard *.[oa]) $(wildcard clean.*)
